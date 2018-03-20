@@ -3,14 +3,12 @@ package com.klintelligence.myapplication;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -68,7 +66,7 @@ public abstract class GetWundergroundData extends AsyncTask<URL, Void, JSONObjec
 
     }
 
-    public abstract void presentResult(JSONObject result);
+    public abstract void handleResult(JSONObject result);
 
     @Override
     protected void onProgressUpdate(Void... values) {
@@ -78,7 +76,7 @@ public abstract class GetWundergroundData extends AsyncTask<URL, Void, JSONObjec
     @Override
     protected void onPostExecute(JSONObject jsonObject) {
         super.onPostExecute(jsonObject);
-        presentResult(jsonObject);
+        handleResult(jsonObject);
 
     }
 }
