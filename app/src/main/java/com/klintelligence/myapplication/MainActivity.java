@@ -298,19 +298,33 @@ public class MainActivity extends AppCompatActivity {
                     JSONArray forecasts = result.getJSONArray("hourly_forecast");
 
                     for (int i = 1; i < 6; i++) {
-                        JSONObject forecast = forecasts.getJSONObject(i - 1);
-                        String hour = forecast.getJSONObject("FCTTIME").getString("hour_padded");
-                        String condition = forecast.getString("condition");
-                        String temp = forecast.getJSONObject("temp").getString("metric");
-                        String rainProb = forecast.getString("pop");
+                        try {
+                            JSONObject forecast = forecasts.getJSONObject(i - 1);
+                            String hour = forecast.getJSONObject("FCTTIME").getString("hour_padded");
+                            String condition = forecast.getString("condition");
+                            String temp = forecast.getJSONObject("temp").getString("metric");
+                            String rainProb = forecast.getString("pop");
 
-                        hourlyForecastTimeTextViews.get(i).setText(hour);
-                        hourlyForecastTempViews.get(i).setText(temp + "°C");
-                        hourlyForecastRainProbViews.get(i).setText(rainProb + "%");
-                        hourlyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
+                            hourlyForecastTimeTextViews.get(i).setText(hour);
+                            hourlyForecastTempViews.get(i).setText(temp + "°C");
+                            hourlyForecastRainProbViews.get(i).setText(rainProb + "%");
+                            hourlyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
+                        }
+                        catch(JSONException e) {
+                            hourlyForecastTimeTextViews.get(i).setText("?");
+                            hourlyForecastTempViews.get(i).setText("?°C");
+                            hourlyForecastRainProbViews.get(i).setText("?%");
+                            hourlyForecastCondImageViews.get(i).setImageResource(R.drawable.icons8_puzzled_96);
+                        }
                     }
                 } catch (JSONException e) {
                     makeShortToast("Error while parsing API response for hourly forecast");
+                    for (int i = 1; i < 6; i++) {
+                        hourlyForecastTimeTextViews.get(i).setText("?");
+                        hourlyForecastTempViews.get(i).setText("?°C");
+                        hourlyForecastRainProbViews.get(i).setText("?%");
+                        hourlyForecastCondImageViews.get(i).setImageResource(R.drawable.icons8_puzzled_96);
+                    }
                     e.printStackTrace();
                 }
             }
@@ -326,20 +340,34 @@ public class MainActivity extends AppCompatActivity {
                     JSONArray forecasts = result.getJSONObject("forecast").getJSONObject("simpleforecast").getJSONArray("forecastday");
 
                     for (int i = 1; i < 4; i++) {
-                        JSONObject forecast = forecasts.getJSONObject(i);
-                        String day = forecast.getJSONObject("date").getString("weekday");
-                        String condition = forecast.getString("conditions");
-                        String maxTemp = forecast.getJSONObject("high").getString("celsius");
-                        String minTemp = forecast.getJSONObject("low").getString("celsius");
-                        String rainProb = forecast.getString("pop");
+                        try {
+                            JSONObject forecast = forecasts.getJSONObject(i);
+                            String day = forecast.getJSONObject("date").getString("weekday");
+                            String condition = forecast.getString("conditions");
+                            String maxTemp = forecast.getJSONObject("high").getString("celsius");
+                            String minTemp = forecast.getJSONObject("low").getString("celsius");
+                            String rainProb = forecast.getString("pop");
 
-                        dailyForecastDayTextViews.get(i).setText(day);
-                        dailyForecastTempTextViews.get(i).setText(maxTemp + "°C / " + minTemp + "°C");
-                        dailyForecastRainProbTextViews.get(i).setText(rainProb + "%");
-                        dailyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
+                            dailyForecastDayTextViews.get(i).setText(day);
+                            dailyForecastTempTextViews.get(i).setText(maxTemp + "°C / " + minTemp + "°C");
+                            dailyForecastRainProbTextViews.get(i).setText(rainProb + "%");
+                            dailyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
+                        }
+                        catch(JSONException e) {
+                            dailyForecastDayTextViews.get(i).setText("?");
+                            dailyForecastTempTextViews.get(i).setText("?°C / ?°C");
+                            dailyForecastRainProbTextViews.get(i).setText("?%");
+                            dailyForecastCondImageViews.get(i).setImageResource(R.drawable.icons8_puzzled_96);
+                        }
                     }
                 } catch (JSONException e) {
                     makeShortToast("Error while parsing API response for daily forecast");
+                    for (int i = 1; i < 4; i++) {
+                        dailyForecastDayTextViews.get(i).setText("?");
+                        dailyForecastTempTextViews.get(i).setText("?°C / ?°C");
+                        dailyForecastRainProbTextViews.get(i).setText("?%");
+                        dailyForecastCondImageViews.get(i).setImageResource(R.drawable.icons8_puzzled_96);
+                    }
                     e.printStackTrace();
                 }
             }
@@ -366,6 +394,10 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     makeShortToast("Error while parsing API response for current forecast");
+                    currentTempTextView.setText("?°C");
+                    currentRainProbTextView.setText("?% chance of rain");
+                    currentCondTextView.setText("?");
+                    currentCondImg.setImageResource(R.drawable.icons8_puzzled_96);
                     e.printStackTrace();
                 }
 
