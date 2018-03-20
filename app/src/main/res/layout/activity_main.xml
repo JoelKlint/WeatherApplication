@@ -184,7 +184,7 @@
                 android:textSize="18sp" />
 
             <ImageView
-                android:id="@+id/hourTwoTimeCondImg"
+                android:id="@+id/hourTwoCondImg"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginBottom="5dp"
