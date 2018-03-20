@@ -9,6 +9,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -18,6 +20,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +31,8 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
     // TODO: Can I trust location services to ping me with an interval?
+
+    final int LOCATION_REQUEST_INTERVAL_MINUTES = 10;
 
     private boolean locationAllowed, receivesLocationUpdates, deniedLocationAllowed;
     private LocationCallback locationListener;
@@ -57,6 +62,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /**
+         *  Bind click listener for refresh button
+         */
+        ((ImageButton)findViewById(R.id.refreshButton)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pingCurrentLocationAndUpdateData();
+            }
+        });
 
         /**
          * Get location provider
@@ -140,7 +155,10 @@ public class MainActivity extends AppCompatActivity {
         } else if (locationAllowed && !receivesLocationUpdates) {
             startLocationUpdates();
         }
-        // Reset in the end of onResume, so it will ask the next time
+        else {
+            makeShortToast("Need location permission. Click refresh button");
+        }
+        // Reset in the end of onResume, so it will ask the next time app opens
         deniedLocationAllowed = false;
     }
 
@@ -150,21 +168,16 @@ public class MainActivity extends AppCompatActivity {
         stopLocationUpdates();
     }
 
-    // TODO: Try not asking for permission, just start the location updating no matter what!
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case Constants.LOCATION_PERMISSION_REQUEST: {
-                Log.d("GRANT RESULTS LENGTH", "" + grantResults.length);
-                Log.d("GRANT RESULTS[0]", "" + grantResults[0]);
-                Log.d("GRANT SUCCESS", "" + PackageManager.PERMISSION_GRANTED);
-                Log.d("GRANT FAILURE", "" + PackageManager.PERMISSION_DENIED);
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("permissionsResult", "Location Access Granted");
                     locationAllowed = true;
+                    deniedLocationAllowed = false;
                 } else {
-                    makeToast("Can not provide weather data without your location", Toast.LENGTH_SHORT);
                     Log.d("permissionsResult", "Location Access Denied");
                     deniedLocationAllowed = true;
                 }
@@ -175,20 +188,21 @@ public class MainActivity extends AppCompatActivity {
     private void prepareLocationTracking() {
         locationAllowed = getHasLocationPermission();
         request = new LocationRequest();
-        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        request.setInterval(1000 * 60 * 5);
-        request.setFastestInterval(10000);
+        request.setPriority(LocationRequest.PRIORITY_LOW_POWER);
+        request.setInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
+        request.setFastestInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
         locationListener = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
-                makeToast("Received new location", Toast.LENGTH_SHORT);
-
                 if (locationResult == null) {
-                    makeToast("Received null location", Toast.LENGTH_SHORT);
+                    Log.d("Location Tracker", "Received null location");
+                    makeShortToast("Received null location");
                     return;
                 }
+                Log.d("Location Tracker", "Received new location!");
+                makeShortToast("Received new location");
                 //stopLocationUpdates();
                 Location location = locationResult.getLastLocation();
                 double latitude = location.getLatitude();
@@ -201,19 +215,44 @@ public class MainActivity extends AppCompatActivity {
     private void stopLocationUpdates() {
         if(receivesLocationUpdates) {
             receivesLocationUpdates = false;
-            makeToast("Stopping location updates", Toast.LENGTH_SHORT);
+            makeShortToast("Stopping location updates");
             locationProviderClient.removeLocationUpdates(locationListener);
         }
     }
 
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
-        // TODO: Locations are never received, unless manually sent to emulator
         if(!receivesLocationUpdates) {
             receivesLocationUpdates = true;
-            makeToast("Starting location updates", Toast.LENGTH_SHORT);
+            makeShortToast("Starting location updates");
             locationProviderClient.requestLocationUpdates(request, locationListener, null);
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void pingCurrentLocationAndUpdateData() {
+        if(!locationAllowed) {
+            askForLocationPermission();
+            makeShortToast("Please click again to fetch data");
+        }
+        else {
+            locationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location == null) {
+                        Log.d("Location Pinger", "Received null location");
+                        makeShortToast("Pinged null location");
+                        return;
+                    }
+                    Log.d("Location Pinger", "Received new location!");
+                    makeShortToast("Pinged new location");
+                    double latitude = location.getLatitude();
+                    double longitude = location.getLongitude();
+                    geoLocate(latitude, longitude);
+                }
+            });
+        }
+
     }
 
     private void geoLocate(double latitude, double longitude) {
@@ -222,25 +261,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void handleResult(JSONObject result) {
                 try {
-                    /*
-                    String type = result.getJSONObject("location").getString("type");
-                    if(!type.equals("CITY")) {
-                        makeToast("Your location type is " + type + ", must be CITY", Toast.LENGTH_SHORT);
-                        return;
-                    }
-                    */
                     String city = result.getJSONObject("location").getString("city");
                     cityTextView.setText(city);
-                    updateWeatherInformation(city);
+                    updateWeatherInformation();
                 } catch (JSONException e) {
-                    makeToast("Error while parsing API response", Toast.LENGTH_SHORT);
+                    makeShortToast("Error while parsing API response for geolocation");
                     e.printStackTrace();
                 }
             }
         }.execute();
     }
 
-    private void updateWeatherInformation(String city) {
+    private void updateWeatherInformation() {
+        String city = cityTextView.getText().toString();
         updateCurrentForecast(city);
         updateDailyForecast(city);
         updateHourlyForecast(city);
@@ -253,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         String currentHour = paddedHour.substring(paddedHour.length() - 2);
         String paddedMinute = "0" + calendar.get(Calendar.MINUTE);
         String currentMinute = paddedMinute.substring(paddedMinute.length() - 2);
-        updatedTimeTextView.setText(currentHour + ":" + currentMinute);
+        updatedTimeTextView.setText("Updated " + currentHour + ":" + currentMinute);
     }
 
     private void updateHourlyForecast(String city) {
@@ -277,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
                         hourlyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
                     }
                 } catch (JSONException e) {
-                    makeToast("Error while parsing API response for hourly forecast", Toast.LENGTH_SHORT);
+                    makeShortToast("Error while parsing API response for hourly forecast");
                     e.printStackTrace();
                 }
             }
@@ -306,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
                         dailyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
                     }
                 } catch (JSONException e) {
-                    makeToast("Error while parsing API response for daily forecasst", Toast.LENGTH_SHORT);
+                    makeShortToast("Error while parsing API response for daily forecast");
                     e.printStackTrace();
                 }
             }
@@ -332,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
                     currentCondImg.setImageResource(getImgResourceForCondition(cond));
 
                 } catch (JSONException e) {
-                    makeToast("Error while parsing API response for current forecast", Toast.LENGTH_SHORT);
+                    makeShortToast("Error while parsing API response for current forecast");
                     e.printStackTrace();
                 }
 
@@ -375,8 +408,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void makeToast(String message, int duration) {
-        Toast toast = Toast.makeText(getApplicationContext(), message, duration);
+    private void makeShortToast(String message) {
+        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
         toast.show();
     }
 
