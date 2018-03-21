@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     final int LOCATION_REQUEST_INTERVAL_MINUTES = 10;
 
-    private boolean locationAllowed, receivesLocationUpdates, deniedLocationAllowed;
+    private boolean locationAllowed, receivesLocationUpdates;
     private LocationCallback locationListener;
     private LocationRequest request;
 
@@ -150,16 +150,16 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Log.d("Location Allowed", "" + locationAllowed);
         Log.d("ReceivesLocationUpdates", "" + receivesLocationUpdates);
-        if (!deniedLocationAllowed && !locationAllowed) {
-            askForLocationPermission();
-        } else if (locationAllowed && !receivesLocationUpdates) {
+        if (!locationAllowed) {
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                makeShortToast("Need location permission. Click refresh");
+            }
+            else {
+                askForLocationPermission();
+            }
+        } else if (!receivesLocationUpdates) {
             startLocationUpdates();
         }
-        else {
-            makeShortToast("Need location permission. Click refresh button");
-        }
-        // Reset in the end of onResume, so it will ask the next time app opens
-        deniedLocationAllowed = false;
     }
 
     @Override
@@ -176,10 +176,8 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("permissionsResult", "Location Access Granted");
                     locationAllowed = true;
-                    deniedLocationAllowed = false;
                 } else {
                     Log.d("permissionsResult", "Location Access Denied");
-                    deniedLocationAllowed = true;
                 }
             }
         }
@@ -190,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         request = new LocationRequest();
         request.setPriority(LocationRequest.PRIORITY_LOW_POWER);
         request.setInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
-        request.setFastestInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
+        //request.setFastestInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
         locationListener = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -203,10 +201,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 Log.d("Location Tracker", "Received new location!");
                 makeShortToast("Received new location");
-                //stopLocationUpdates();
                 Location location = locationResult.getLastLocation();
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
+                Log.d("Location Tracker", "Longitude: " + longitude);
+                Log.d("Location Tracker", "Latitude: " + latitude);
                 geoLocate(latitude, longitude);
             }
         };
@@ -248,6 +247,8 @@ public class MainActivity extends AppCompatActivity {
                     makeShortToast("Pinged new location");
                     double latitude = location.getLatitude();
                     double longitude = location.getLongitude();
+                    Log.d("Location Pinger", "Longitude: " + longitude);
+                    Log.d("Location Pinger", "Latitude: " + latitude);
                     geoLocate(latitude, longitude);
                 }
             });
@@ -450,7 +451,6 @@ public class MainActivity extends AppCompatActivity {
                 this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 Constants.LOCATION_PERMISSION_REQUEST);
-
     }
 
     private boolean getHasLocationPermission() {
