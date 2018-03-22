@@ -4,15 +4,15 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -30,8 +30,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
-    // TODO: Can I trust location services to ping me with an interval?
 
+    final static int LOCATION_PERMISSION_REQUEST = 1;
     final int LOCATION_REQUEST_INTERVAL_MINUTES = 10;
 
     private boolean locationAllowed, receivesLocationUpdates;
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         /**
          *  Bind click listener for refresh button
          */
-        ((ImageButton)findViewById(R.id.refreshButton)).setOnClickListener(new View.OnClickListener() {
+        ((ImageButton) findViewById(R.id.refreshButton)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 pingCurrentLocationAndUpdateData();
@@ -151,10 +151,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d("Location Allowed", "" + locationAllowed);
         Log.d("ReceivesLocationUpdates", "" + receivesLocationUpdates);
         if (!locationAllowed) {
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 makeShortToast("Need location permission. Click refresh");
-            }
-            else {
+            } else {
                 askForLocationPermission();
             }
         } else if (!receivesLocationUpdates) {
@@ -172,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
-            case Constants.LOCATION_PERMISSION_REQUEST: {
+            case LOCATION_PERMISSION_REQUEST: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("permissionsResult", "Location Access Granted");
                     locationAllowed = true;
@@ -212,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopLocationUpdates() {
-        if(receivesLocationUpdates) {
+        if (receivesLocationUpdates) {
             receivesLocationUpdates = false;
             makeShortToast("Stopping location updates");
             locationProviderClient.removeLocationUpdates(locationListener);
@@ -221,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
-        if(!receivesLocationUpdates) {
+        if (!receivesLocationUpdates) {
             receivesLocationUpdates = true;
             makeShortToast("Starting location updates");
             locationProviderClient.requestLocationUpdates(request, locationListener, null);
@@ -230,11 +229,10 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     private void pingCurrentLocationAndUpdateData() {
-        if(!locationAllowed) {
+        if (!locationAllowed) {
             askForLocationPermission();
             makeShortToast("Please click again to fetch data");
-        }
-        else {
+        } else {
             locationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                 @Override
                 public void onSuccess(Location location) {
@@ -310,8 +308,7 @@ public class MainActivity extends AppCompatActivity {
                             hourlyForecastTempViews.get(i).setText(temp + "°C");
                             hourlyForecastRainProbViews.get(i).setText(rainProb + "%");
                             hourlyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
-                        }
-                        catch(JSONException e) {
+                        } catch (JSONException e) {
                             hourlyForecastTimeTextViews.get(i).setText("?");
                             hourlyForecastTempViews.get(i).setText("?°C");
                             hourlyForecastRainProbViews.get(i).setText("?%");
@@ -353,8 +350,7 @@ public class MainActivity extends AppCompatActivity {
                             dailyForecastTempTextViews.get(i).setText(maxTemp + "°C / " + minTemp + "°C");
                             dailyForecastRainProbTextViews.get(i).setText(rainProb + "%");
                             dailyForecastCondImageViews.get(i).setImageResource(getImgResourceForCondition(condition));
-                        }
-                        catch(JSONException e) {
+                        } catch (JSONException e) {
                             dailyForecastDayTextViews.get(i).setText("?");
                             dailyForecastTempTextViews.get(i).setText("?°C / ?°C");
                             dailyForecastRainProbTextViews.get(i).setText("?%");
@@ -389,7 +385,8 @@ public class MainActivity extends AppCompatActivity {
                     String cond = observation.getString("weather");
 
                     currentTempTextView.setText(temp + "°C");
-                    currentRainProbTextView.setText(chanceOfRain + " chance of rain");
+                    // TODO: Set chance of rain instead of relative humidity
+                    currentRainProbTextView.setText(chanceOfRain + " relative humidity");
                     currentCondTextView.setText(cond);
                     currentCondImg.setImageResource(getImgResourceForCondition(cond));
 
@@ -450,7 +447,7 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(
                 this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                Constants.LOCATION_PERMISSION_REQUEST);
+                LOCATION_PERMISSION_REQUEST);
     }
 
     private boolean getHasLocationPermission() {
