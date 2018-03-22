@@ -18,13 +18,13 @@ import java.util.Scanner;
  * Created by firefox on 2018-03-20.
  */
 
-public abstract class GetWundergroundData extends AsyncTask<URL, Void, JSONObject> {
+public abstract class GetWundergroundDataTask extends AsyncTask<URL, Void, JSONObject> {
 
     final String API_KEY = "12f650b9d99c55ee";
     final String BASE_URL = "http://api.wunderground.com/api/" + API_KEY;
     String QUERY_URL = "";
 
-    public GetWundergroundData(String query) {
+    public GetWundergroundDataTask(String query) {
         QUERY_URL =  BASE_URL + query;
     }
 

@@ -469,4 +469,13 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:autoLink="web"
+        android:text="Images by https://icons8.com"
+        android:textAlignment="center" />
+
 </LinearLayout>

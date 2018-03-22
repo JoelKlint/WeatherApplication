@@ -256,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void geoLocate(double latitude, double longitude) {
         String query = "/geolookup/q/" + latitude + "," + longitude + ".json";
-        new GetWundergroundData(query) {
+        new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
                 try {
@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateHourlyForecast(String city) {
         String query = "/hourly/q/" + city + ".json";
-        new GetWundergroundData(query) {
+        new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
                 try {
@@ -331,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateDailyForecast(String city) {
         String query = "/forecast/q/" + city + ".json";
-        new GetWundergroundData(query) {
+        new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
                 try {
@@ -373,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateCurrentForecast(String city) {
         String query = "/conditions/q/" + city + ".json";
-        new GetWundergroundData(query) {
+        new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
                 try {
