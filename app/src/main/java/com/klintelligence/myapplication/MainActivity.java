@@ -32,7 +32,7 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
 
     final static int LOCATION_PERMISSION_REQUEST = 1;
-    final int LOCATION_REQUEST_INTERVAL_MINUTES = 10;
+    final int LOCATION_REQUEST_INTERVAL_SECONDS = 3;
 
     private boolean locationAllowed, receivesLocationUpdates;
     private LocationCallback locationListener;
@@ -185,9 +185,8 @@ public class MainActivity extends AppCompatActivity {
     private void prepareLocationTracking() {
         locationAllowed = getHasLocationPermission();
         request = new LocationRequest();
-        request.setPriority(LocationRequest.PRIORITY_LOW_POWER);
-        request.setInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
-        //request.setFastestInterval(1000 * 60 * LOCATION_REQUEST_INTERVAL_MINUTES);
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setInterval(1000 * LOCATION_REQUEST_INTERVAL_SECONDS);
         locationListener = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -289,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHourlyForecast(String city) {
-        String query = "/hourly/q/" + city + ".json";
+        String query = "/hourly/q/30/" + city + ".json";
         new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
@@ -330,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDailyForecast(String city) {
-        String query = "/forecast/q/" + city + ".json";
+        String query = "/forecast/q/30/" + city + ".json";
         new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
@@ -372,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCurrentForecast(String city) {
-        String query = "/conditions/q/" + city + ".json";
+        String query = "/conditions/q/30/" + city + ".json";
         new GetWundergroundDataTask(query) {
             @Override
             public void handleResult(JSONObject result) {
